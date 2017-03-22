@@ -19,6 +19,23 @@ struct Keyframe
 
 struct Keyframe_pck 
 {
+	Keyframe_pck() : time(0),r(0),g(0),b(0){}
+
+	Keyframe_pck(const Keyframe& k) :
+	time(k.time),r(k.r),g(k.g),b(k.b)
+	{
+
+	}
+	
+	Keyframe_pck& operator=(const Keyframe k)
+	{
+		time = k.time;
+		r = k.r;
+		g = k.g;
+		b = k.b;
+		return *this;
+	}
+
 	keytime_t time;
 	uint8_t r;
 	uint8_t g;

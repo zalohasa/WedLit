@@ -3,7 +3,14 @@
 #include <iostream>
 #include <string.h>
 #include <unistd.h>
+#include <poll.h>
 #include <arpa/inet.h>
+
+
+static void charPointerDeleter(const char* pointer)
+{
+	free((void*) pointer);
+}
 
 TcpSocket::TcpSocket(std::string ipAddress, uint16_t port) : Socket()
 {
@@ -29,7 +36,7 @@ TcpSocket::~TcpSocket()
 {
 	if (valid_)
 	{
-		shutdown(socketDescriptor_, 2);
+		shutdown(socketDescriptor_, SHUT_RDWR);
 		::close(socketDescriptor_);
 	}
 }
@@ -60,20 +67,43 @@ ssize_t TcpSocket::send(const uint8_t* data, size_t len)
 	{
 		return -1;
 	}
-	return sendto(socketDescriptor_, data, len, 0, (struct sockaddr *)&address_, sizeof(address_));
+	return ::send(socketDescriptor_, (void*)data, len, 0);
 }
 
-void TcpSocket::recv()
+TcpSocket::TcpData TcpSocket::recv(int timeout)
 {
-	char buff[512];
-	if (valid_)
+	TcpSocket::TcpData data;
+	if (!valid_)
 	{
-		::recv(socketDescriptor_, (void*)buff, sizeof(buff), 0);
+		return data;
 	}
+	
+	struct pollfd fds[1];
+	fds[0].fd = socketDescriptor_;
+	fds[0].events = POLLIN;
+
+	if (poll(fds, 1, timeout) > 0)
+	{
+		data.timestamp = std::chrono::steady_clock::now();
+		char buff[512];
+		ssize_t res = ::recv(socketDescriptor_, (void*)buff, sizeof(buff), 0);
+		if (res > 0)
+		{
+			char* raw = (char*) malloc(res);
+			memcpy(raw, buff, res);
+			std::function<void(const char*)> deleter = charPointerDeleter;
+			data.data = std::shared_ptr<const char>(raw, deleter);
+			data.size = res;
+		}
+	}
+	return data;
 }
 
 void TcpSocket::close()
 {
-	::close(socketDescriptor_);
-	valid_ = false;
+	if (valid_)
+	{
+		::close(socketDescriptor_);
+		valid_ = false;
+	}
 }

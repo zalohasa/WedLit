@@ -5,10 +5,19 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <chrono>
+#include <memory>
 
 class TcpSocket : public Socket
 {
 public:
+
+	struct TcpData
+	{
+		std::shared_ptr<const char> data;
+		size_t size;
+		std::chrono::steady_clock::time_point timestamp;
+	};
 
 	TcpSocket(std::string ipAddress, uint16_t port);
 	~TcpSocket();
@@ -20,7 +29,11 @@ public:
 
 	void close();
 	void reopen();
-	void recv();//TODO revisit
+	TcpData recv(int timeout = 2000);//TODO revisit
+
+	//Server methods
+	bool bind(uint16_t port);
+	bool listen(int max_connexions);
 
 	//TODO make recv methods
 
