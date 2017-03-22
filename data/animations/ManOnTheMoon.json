@@ -1,0 +1,14 @@
+{
+	"animation" : 
+	{
+		"type" : "file",
+		"file" : "/home/zalo/test.anim"
+	},
+	"audioFile" : "/home/zalo/tmp.mp3",
+	"channelMap" :
+	{
+		"82e69d" : 2,
+		"86a68d" : 1,
+		"17b8aa" : 0
+	}
+}

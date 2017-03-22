@@ -1,0 +1,2 @@
+#define WedLit_VERSION_MAJOR @WedLit_VERSION_MAJOR@
+#define WedLit_VERSION_MINOR @WedLit_VERSION_MINOR@

@@ -1,0 +1,14 @@
+{
+	"animation" : 
+	{
+		"type" : "file",
+		"file" : "/home/zalo/test2.anim"
+	},
+	"audioFile" : "/mnt/NasuX/Media/Musica/Passenger/All The Little Lights/02 - Let Her Go.mp3",
+	"channelMap" :
+	{
+		"82e69d" : 2,
+		"86a68d" : 1,
+		"17b8aa" : 0
+	}
+}
