@@ -27,6 +27,7 @@ void Player2::play_internal(Player2* player)
     {
         ao_play(player->dev_, (char*)buffer, done);
     }
+    DEBUG("End of the audio player thread");
 }
 
 Player2::Player2(const std::string& filename) : 
@@ -35,16 +36,13 @@ Player2::Player2(const std::string& filename) :
 	stop_(false),
     playing_(false)
 {
-    
     int err;
 
     ao_sample_format format;
     int channels, encoding;
     long rate;
 
-    /* initializations */
-    ao_initialize();
-    mpg123_init();
+    
     int nDrivers;
 
     int driver = ao_default_driver_id();
@@ -100,6 +98,7 @@ Player2::Player2(const std::string& filename) :
 Player2::~Player2()
 {
     //Wait for audio thread to finish
+    stop_ = true;
     if (bck_.joinable())
     {
         DEBUG("Waiting for audio thread to finish");
@@ -109,8 +108,6 @@ Player2::~Player2()
     ao_close(dev_);
     mpg123_close(mh_);
     mpg123_delete(mh_);
-    mpg123_exit();
-    ao_shutdown();
 }
 
 bool Player2::play()
@@ -135,3 +132,15 @@ bool Player2::stop()
 	return true;
 }
 
+void Player2::init()
+{
+    /* initializations */
+    ao_initialize();
+    mpg123_init();
+}
+
+void Player2::shutdown()
+{
+    mpg123_exit();
+    ao_shutdown();
+}

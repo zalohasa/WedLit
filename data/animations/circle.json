@@ -2,14 +2,16 @@
 	"animation" : 
 	{
 		"type" : "circle",
-		"interval" : "300",
-		"channels" : "3",
+		"interval" : "150",
+		"channels" : "5",
 		"level" : "16"
 	},
 	"channelMap" : 
 	{
-		"auto" : true,
-		"17b8aa" : 2,
+		
+		"17b8aa" : 4,
+		"108e57" : 3,
+		"108c47" : 2,
 		"82e69d" : 1,
 		"86a68d" : 0
 	}

@@ -11,6 +11,7 @@
 #include <QJsonParseError>
 #include <QStringList>
 #include <QFile>
+#include <QDir>
 #include <QMediaPlayer>
 
 #include <iostream>
@@ -23,11 +24,10 @@
 
 INIT_LOG(ANIM_CONTR);
 
-static long getTimestamp()
+
+void AnimationController::play_thread_entry(AnimationController* ctrl)
 {
-	struct timespec time;
-	clock_gettime(CLOCK_MONOTONIC, &time);
-	return (time.tv_sec * 1000) + (time.tv_nsec / (1000*1000));
+	ctrl->internal_start();
 }
 
 AnimationController::AnimationController() : 
@@ -40,9 +40,10 @@ AnimationController::AnimationController() :
 
 AnimationController::~AnimationController()
 {
-	if (player_)
+	if (playThread_.joinable())
 	{
-		delete player_;
+		DEBUG("Waiting for animation controller thread to finish");
+		playThread_.join();
 	}
 }
 
@@ -52,7 +53,13 @@ AnimationController::AnimationController(std::string jsonFilename, std::shared_p
 	valid_(true),
 	playing_(false)
 {
-	QFile loadFile(QString(jsonFilename.c_str()));
+	jsonFilename = FOLDER_ANIMATIONS + jsonFilename;
+	QDir dir(jsonFilename.c_str());
+
+	dir.makeAbsolute();
+	DEBUG("File path: {}", dir.absolutePath().toStdString());
+
+	QFile loadFile(dir.absolutePath());
 
     if (!loadFile.open(QIODevice::ReadOnly)) {
         ERROR("File not found: {}",jsonFilename);
@@ -82,27 +89,8 @@ void AnimationController::setNodeController(std::shared_ptr<NodeController> nCon
 	nodeController_ = nController;
 }
 
-void AnimationController::start()
+void AnimationController::internal_start()
 {
-	//TODO set channel map to nodes.
-	if (!animation_)
-	{
-		WARN("No animation registered");
-		if (player_)
-		{
-			INFO("Playing audio only animation");
-			player_->play();
-			playing_ = true;
-		}
-		return;
-	}
-
-	if (!nodeController_)
-	{
-		ERROR("No node controller available");
-		return;
-	}
-
 	nodeController_->clear();
 
 	BaseAnimation::ChannelKeyList list;
@@ -127,11 +115,13 @@ void AnimationController::start()
 		std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
 		nodeController_->play();
 		
-		usleep(200*1000);
+		//needed wait before try to sync. 
+		//TODO Revisit when a new sync gets implemented.
+		usleep(200*1000); 
 		nodeController_->correctDrift(startTime);
 
 		bool firstTime = true;
-		while ((keyout = animation_->getFirstKeyout()) != KEYTIME_MAX)
+		while (playing_ && (keyout = animation_->getFirstKeyout()) != KEYTIME_MAX)
 		{
 			list.clear();
 			animation_->getNKeys(list, maxKeysPerChannel);
@@ -151,6 +141,8 @@ void AnimationController::start()
 			TRACE("End of sleep, sending data");
 			nodeController_->sendKeys(list);
 		}
+		playing_ = false;
+		INFO("Animation finished");
 	}
 	else
 	{
@@ -159,11 +151,41 @@ void AnimationController::start()
 		playing_ = true;
 		return;
 	}
+}
+
+void AnimationController::start()
+{
+	//TODO set channel map to nodes.
+	if (!animation_)
+	{
+		WARN("No animation registered");
+		if (player_)
+		{
+			INFO("Playing audio only animation");
+			player_->play();
+			playing_ = true;
+		}
+		return;
+	}
+
+	if (!nodeController_)
+	{
+		ERROR("No node controller available");
+		return;
+	}
+
+	INFO("Starting a new thread to play the animation");
+	playThread_ = std::thread(&AnimationController::play_thread_entry, this);
 
 }
 
 void AnimationController::stop()
 {
+	if (player_)
+	{
+		player_->stop();
+		player_.reset();
+	}
 	if (nodeController_)
 	{
 		nodeController_->stop();
@@ -299,7 +321,7 @@ void AnimationController::initializeAudio(QString filename)
 	audioFile_ = filename.toStdString();
 	DEBUG("Initialize audio with file: {}", filename.toStdString());
 
-	player_ = new Player2(audioFile_);
+	player_ = std::unique_ptr<IPlayer>(new Player2(audioFile_));
 
 }
 

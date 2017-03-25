@@ -7,8 +7,6 @@
 	"audioFile" : "/mnt/NasuX/Media/Musica/Van Morrison/Van Morrison-Still On Top-The Greatest Hits-2CD-2007/CD1/106-van_morrison-brown_eyed_girl.mp3",
 	"channelMap" :
 	{
-		"82e69d" : 2,
-		"86a68d" : 1,
-		"17b8aa" : 0
+		"auto" : true
 	}
 }

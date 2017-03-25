@@ -1,11 +1,13 @@
 #ifndef ANIMATION_CONTROLLER_H
 #define ANIMATION_CONTROLLER_H
 
-#include <string>
-#include <memory>
 #include <QByteArray>
 #include <QMediaPlayer>
 #include <QJsonObject>
+
+#include <string>
+#include <memory>
+#include <thread>
 
 class NodeController;
 class IPlayer;
@@ -32,16 +34,19 @@ public slots:
 
 
 private:
+	static void play_thread_entry(AnimationController* ac);
+	void internal_start();
 	void initializeFromJson(QByteArray data);
 	void parseAnimation(QJsonObject anim);
 	void parseChannelMap(QJsonObject map);
 	void initializeAudio(QString filename);
 	std::unique_ptr<BaseAnimation> animation_;
 	std::shared_ptr<NodeController> nodeController_;
-	IPlayer* player_;
+	std::unique_ptr<IPlayer> player_;
 	std::string audioFile_;
 	bool valid_;
 	bool playing_;
+	std::thread playThread_;
 
 };
 

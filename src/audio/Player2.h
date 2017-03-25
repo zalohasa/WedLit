@@ -18,6 +18,9 @@ public:
 
 	bool play();
 	bool stop();
+
+	static void init();
+	static void shutdown();
 	
 private:
 

@@ -241,6 +241,7 @@ void NodeController::init()
 		nodeIdToNode_.insert(std::make_pair(id, newNode));
 		DEBUG("Node found: {} Address: {}", id, n.address);
 	}
+	INFO("Found {} nodes", nodeIdToNode_.size());
 }
 
 NodeController::NodeId NodeController::stripNodeID(std::string nodeIdentification)
@@ -289,25 +290,24 @@ void NodeController::sendToChannel(KeyframeData& data, AnimationChannel ch)
 
 void NodeController::correctDrift(std::chrono::steady_clock::time_point startTime)
 {
-	//TODO delete the for when done.
+	//Take the first node of the list.
 	std::shared_ptr<Node> node;
-	for (auto pair : nodeIdToNode_)
-	{
-		if (pair.second->getIp() == "192.168.2.39")
-		{
-			node = pair.second;
-			break;
-		}
-	}
+	node = (*nodeIdToNode_.begin()).second;
 
 	INFO("Correcting drift using node {} and start {}", node->getNodeId(), startTime.time_since_epoch().count());
 	std::vector<std::pair<uint32_t, uint32_t>> data;
 	int32_t offset, roundTrip;
 	for (int i = 0; i < 4; ++i)
 	{
-		node->sendSyncRequest(startTime, offset, roundTrip);
-		DEBUG("offset: {} - Roundtrip: {}", offset, roundTrip);
-		data.push_back(std::make_pair(offset, roundTrip));
+		if (node->sendSyncRequest(startTime, offset, roundTrip))
+		{
+			DEBUG("offset: {} - Roundtrip: {}", offset, roundTrip);
+			data.push_back(std::make_pair(offset, roundTrip));
+		}
+		else
+		{
+			WARN("Ignoring syncRequest to node {}", node->getNodeId());
+		}
 	}
 
 	//Process the data
@@ -324,7 +324,10 @@ void NodeController::correctDrift(std::chrono::steady_clock::time_point startTim
 		}
 	}
 	int32_t finalOffset = selected.first;
-	DEBUG("Final offset for node {}, with roundtrip {}, {}ms", node->getNodeId(), minRound, finalOffset*(-1));
+	INFO("Final offset for node {}, with roundtrip {}, {}ms", node->getNodeId(), minRound, finalOffset*(-1));
+	
+	 //TODO as the time sync is much more precise than expected, 
+	//May be I can delete this if and allways apply the offset.
 	if (std::abs(finalOffset) > 10)
 	{
 		uint8_t data[6];
