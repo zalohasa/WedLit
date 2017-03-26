@@ -20,6 +20,8 @@ FileAnimation::FileAnimation(const BaseAnimation::AnimationParameters& params)
 			uint8_t nChannels;
 			file.read((char*)&nChannels, sizeof(uint8_t));
 			DEBUG("Reading {} channels", nChannels);
+
+			//Array of uint32 with number of keys for each channel.
 			uint32_t *keyframes = new uint32_t[nChannels];
 			file.read((char*)keyframes, sizeof(uint32_t)*nChannels);
 
@@ -38,6 +40,8 @@ FileAnimation::FileAnimation(const BaseAnimation::AnimationParameters& params)
 				}
 				data_.push_back(keyList);
 			}
+			delete [] keyframes;
+			delete readKey;
 			file.close();
 		}
 		else

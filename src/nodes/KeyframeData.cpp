@@ -1,12 +1,20 @@
 #include "KeyframeData.h"
 #include "BasicTypes.h"
 
+static void uint8_t_pointerDeleter(uint8_t* data)
+{
+	free((void*) data);
+}
+
 KeyframeData::KeyframeData(const BaseAnimation::ChannelKeyList& chKeys) :
 	size_(0),
 	nChannels_(0)
 {
 	size_ = numberOfBytes_multi(chKeys, nChannels_);
-	data_ = std::shared_ptr<uint8_t>(new uint8_t[size_]);
+	uint8_t* rawData = (uint8_t*)malloc(sizeof(uint8_t) * size_);
+
+	std::function<void(uint8_t*)> deleter = uint8_t_pointerDeleter;
+	data_ = std::shared_ptr<uint8_t>(rawData, deleter);
 	initializeChannelData_multi(chKeys);
 	type_ = DataType::DATA_MULTI;
 }
@@ -21,7 +29,10 @@ KeyframeData::KeyframeData(const BaseAnimation::SharedKeyList keyList) :
 	nChannels_(0)
 {
 	size_ = numberOfBytes_single(keyList);
-	data_ = std::shared_ptr<uint8_t>(new uint8_t[size_]);
+	uint8_t* rawData = (uint8_t*)malloc(sizeof(uint8_t) * size_);
+
+	std::function<void(uint8_t*)> deleter = uint8_t_pointerDeleter;
+	data_ = std::shared_ptr<uint8_t>(rawData, deleter);
 	initializeChannelData_single(keyList);
 	nChannels_ = 1;
 	type_ = DataType::DATA_SINGLE;

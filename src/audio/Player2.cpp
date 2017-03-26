@@ -27,6 +27,8 @@ void Player2::play_internal(Player2* player)
     {
         ao_play(player->dev_, (char*)buffer, done);
     }
+
+    free((void*)buffer);
     DEBUG("End of the audio player thread");
 }
 
