@@ -12,7 +12,6 @@
 #include <QStringList>
 #include <QFile>
 #include <QDir>
-#include <QMediaPlayer>
 
 #include <iostream>
 #include <cassert>
@@ -23,7 +22,6 @@
 #include <chrono>
 
 INIT_LOG(ANIM_CONTR);
-
 
 void AnimationController::play_thread_entry(AnimationController* ctrl)
 {
@@ -102,7 +100,7 @@ void AnimationController::internal_start()
 	{
 		size_t maxKeysPerChannel = std::floor(MAX_KEYS_ON_UPDATE / animation_->getChannels());
 		DEBUG("Playing a SINGLE type animation with {} keys per channel on update.", maxKeysPerChannel);
-		//TODO implement in a different thread.
+
 		playing_ = true;
 		keytime_t keyout, lastKeyout;
 		lastKeyout = 0;
@@ -155,7 +153,6 @@ void AnimationController::internal_start()
 
 void AnimationController::start()
 {
-	//TODO set channel map to nodes.
 	if (!animation_)
 	{
 		WARN("No animation registered");
@@ -176,7 +173,6 @@ void AnimationController::start()
 
 	INFO("Starting a new thread to play the animation");
 	playThread_ = std::thread(&AnimationController::play_thread_entry, this);
-
 }
 
 void AnimationController::stop()

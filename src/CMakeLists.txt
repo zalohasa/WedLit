@@ -10,7 +10,7 @@ add_library(WedLitLib STATIC
 	Server.cpp
 	Connection.cpp
 	Commands.cpp)
-target_link_libraries(WedLitLib Qt5::Core Qt5::Multimedia)
+target_link_libraries(WedLitLib Qt5::Core)
 target_link_libraries(WedLitLib Animations Audio Nodes Network)
 
 add_executable(WedLit WedLit.cpp)

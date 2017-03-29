@@ -12,7 +12,7 @@ configure_file (
 	)
 
 find_package(Qt5Core REQUIRED)
-find_package(Qt5Multimedia REQUIRED)
+#find_package(Qt5Multimedia REQUIRED)
 
 option (TEST_VERBOSE "Make tests print log data to stdout" OFF)
 

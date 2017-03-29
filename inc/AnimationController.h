@@ -2,7 +2,6 @@
 #define ANIMATION_CONTROLLER_H
 
 #include <QByteArray>
-#include <QMediaPlayer>
 #include <QJsonObject>
 
 #include <string>
@@ -13,7 +12,7 @@ class NodeController;
 class IPlayer;
 class BaseAnimation;
 
-class AnimationController : public QObject
+class AnimationController
 {
 	
 public:
@@ -26,7 +25,6 @@ public:
 	void setAnimation(std::unique_ptr<BaseAnimation> animation);
 	void setNodeController(std::shared_ptr<NodeController> nController);
 
-public slots:
 	void start();
 	void stop();
 	bool isValid();

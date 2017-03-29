@@ -16,8 +16,7 @@ const char* json1 = " \
 		\"type\": \"nullanimation\",\
 		\"param1\": \"param1\",\
 		\"param2\": \"param2\"\
-	},\
-	\"audioFile\": \"/home/test\"\
+	}\
 }\
 ";
 
@@ -28,8 +27,7 @@ const char* json2 = " \
 		\"type\": \"test\",\
 		\"param1\": \"param1\",\
 		\"param2\": \"param2\"\
-	},\
-	\"audioFile\": \"/home/test\"\
+	}\
 }\
 ";
 

@@ -1,5 +1,9 @@
-#include <iostream>
 #include "BaseAnimation.h"
+#include "WedLit.h"
+
+#include <iostream>
+
+INIT_LOG(BASEANIMATION);
 
 using keyindex_t = std::vector<Keyframe>::size_type;
 static constexpr std::vector<Keyframe>::size_type END = std::numeric_limits<std::vector<Keyframe>::size_type>::max();
@@ -19,7 +23,7 @@ void BaseAnimation::getNKeys(ChannelKeyList &list, size_t keysPerChannel)
 	if (!list.empty())
 	{
 		//TODO assert
-		std::cout << __FILE__ << __FUNCTION__ << "The list must be empty" << std::endl;
+		ERROR("The list must be empty");
 		return;
 	}
 
