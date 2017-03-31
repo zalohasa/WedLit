@@ -17,6 +17,7 @@ void Player2::play_internal(Player2* player)
     unsigned char* buffer = (unsigned char*) malloc(buffer_size * sizeof(unsigned char));
     
     {
+        //Notify others I'm about to play....
         std::unique_lock<std::mutex>(player->lock_);
         player->playing_ = true;
         player->cond_.notify_one();
@@ -29,6 +30,11 @@ void Player2::play_internal(Player2* player)
     }
 
     free((void*)buffer);
+
+    /* clean up */
+    ao_close(player->dev_);
+    mpg123_close(player->mh_);
+    mpg123_delete(player->mh_);
     DEBUG("End of the audio player thread");
 }
 
@@ -97,6 +103,15 @@ Player2::Player2(const std::string& filename) :
     }
 }
 
+void Player2::waitForFinish()
+{
+    if (bck_.joinable())
+    {
+        DEBUG("Waiting for audio thread to finish");
+        bck_.join();
+    }
+}
+
 Player2::~Player2()
 {
     //Wait for audio thread to finish
@@ -106,10 +121,7 @@ Player2::~Player2()
         DEBUG("Waiting for audio thread to finish");
         bck_.join();
     }
-	/* clean up */
-    ao_close(dev_);
-    mpg123_close(mh_);
-    mpg123_delete(mh_);
+	
 }
 
 bool Player2::play()

@@ -1,0 +1,12 @@
+{
+	"animation" : 
+	{
+		"type" : "file",
+		"file" : "/home/zalo/testuto.anim"
+	},
+	"audioFile" : "/mnt/NasuX/Media/Musica/Passenger/All The Little Lights/04 - All The Little Lights.mp3",
+	"channelMap" :
+	{
+		"auto" : true
+	}
+}

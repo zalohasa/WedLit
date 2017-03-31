@@ -9,6 +9,8 @@ public:
 	virtual bool play() = 0;
 	virtual bool stop() = 0;
 
+	virtual void waitForFinish() = 0;
+
 };
 
 #endif

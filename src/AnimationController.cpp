@@ -139,6 +139,13 @@ void AnimationController::internal_start()
 			TRACE("End of sleep, sending data");
 			nodeController_->sendKeys(list);
 		}
+
+		if (player_)
+		{
+			//If there are no more keys, but the audio is still paying, wait for the audio to finish...
+			player_->waitForFinish();
+		}
+
 		playing_ = false;
 		INFO("Animation finished");
 	}
@@ -180,7 +187,7 @@ void AnimationController::stop()
 	if (player_)
 	{
 		player_->stop();
-		player_.reset();
+		//player_.reset();
 	}
 	if (nodeController_)
 	{

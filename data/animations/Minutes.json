@@ -1,0 +1,12 @@
+{
+	"animation" : 
+	{
+		"type" : "file",
+		"file" : "/home/zalo/testuto2.anim"
+	},
+	"audioFile" : "/mnt/NasuX/Media/Musica/Mike Oldfield/Man On The Rocks/05 Minutes.mp3",
+	"channelMap" :
+	{
+		"auto" : true
+	}
+}

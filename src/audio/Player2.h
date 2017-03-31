@@ -18,9 +18,11 @@ public:
 
 	bool play();
 	bool stop();
+	void waitForFinish();
 
 	static void init();
 	static void shutdown();
+
 	
 private:
 
