@@ -50,6 +50,7 @@ public:
 	void stop();
 	void clear();
 	std::vector<NodeId> getNodes() const;
+	std::vector<std::string> getNodesAddr() const;
 	size_t getNodeCount() const; //TODO needed?
 	void setDiscoveryTimeout(int newTimeout);
 

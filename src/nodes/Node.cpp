@@ -36,6 +36,11 @@ const NodeController::NodeId& Node::getNodeId()
 	return nodeId_;
 }
 
+const std::string& Node::getNodeAddr()
+{
+	return ip_;
+}
+
 bool Node::setChannel(AnimationChannel ch)
 {
 	currentCh_ = ch;

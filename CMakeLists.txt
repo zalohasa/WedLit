@@ -24,7 +24,12 @@ include_directories("${PROJECT_SOURCE_DIR}/inc")
 include_directories("${PROJECT_SOURCE_DIR}/src/net")
 include_directories("${PROJECT_SOURCE_DIR}/src/audio")
 add_subdirectory(src)
+add_subdirectory(firmware)
 
 install (DIRECTORY data DESTINATION ${CMAKE_INSTALL_PREFIX})
 install (DIRECTORY DESTINATION data/music)
+install (
+	FILES tools/espota.py DESTINATION tools
+	PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+	)
 

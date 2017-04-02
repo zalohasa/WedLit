@@ -17,6 +17,7 @@ public:
 	bool setChannel(AnimationChannel ch);
 	AnimationChannel getChannel();
 	const NodeController::NodeId& getNodeId();
+	const std::string& getNodeAddr();
 
 	bool off();
 	bool clear();

@@ -148,6 +148,19 @@ void NodeController::clear()
 	}
 }
 
+std::vector<std::string> NodeController::getNodesAddr() const
+{
+	std::vector<std::string> ips;
+	ips.reserve(nodeIdToNode_.size());
+
+	for (auto node : nodeIdToNode_)
+	{
+		ips.push_back(node.second->getNodeAddr());
+	}
+	return ips;
+
+}
+
 std::vector<NodeController::NodeId> NodeController::getNodes() const
 {
 	std::vector<NodeId> nodes;

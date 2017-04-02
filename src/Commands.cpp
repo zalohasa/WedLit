@@ -67,14 +67,14 @@ namespace Commands
 
 	void stop()
 	{
-		if (appContext.anim_controller && appContext.anim_controller->isPlaying())
+		if (appContext.anim_controller)
 		{
 			INFO("Stoping animation...");
 			appContext.anim_controller->stop();
 		}
 		else
 		{
-			WARN("Can't stop an animation because there is none playing");
+			WARN("Can't stop an animation because there is no application");
 		}
 	}
 

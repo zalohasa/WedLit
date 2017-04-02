@@ -335,7 +335,7 @@ void parseKeyframes_tcp(WiFiClient& client, char* cmd, int len)
     uint8_t r = client.read();//cmd[inIndex+4];
     uint8_t g = client.read();//cmd[inIndex+5];
     uint8_t b = client.read();//cmd[inIndex+6];
-    client.read();//Read the padding.
+    //client.read();//Read the padding.
 
     keys.insertKeyframe(time, r, g, b);
     yield();//Let the network do its job.
@@ -386,7 +386,7 @@ void parseAndAddKeyframes(WiFiUDP& server, char* cmd, int len)
     uint8_t r = server.read();//cmd[inIndex+4];
     uint8_t g = server.read();//cmd[inIndex+5];
     uint8_t b = server.read();//cmd[inIndex+6];
-    server.read();//Read the padding.
+    //server.read();//Read the padding.
 
     keys.insertKeyframe(time, r, g, b);
     yield();//Let the network do its job.

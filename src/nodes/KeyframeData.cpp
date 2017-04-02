@@ -92,19 +92,19 @@ size_t KeyframeData::numberOfBytes_multi(const BaseAnimation::ChannelKeyList& ch
 		nKeys += ch->size();
 	}
 
-	size = ((sizeof(KeyIndex) * nChannels) + (sizeof(Keyframe) * nKeys));
+	size = ((sizeof(KeyIndex) * nChannels) + (sizeof(Keyframe_pck) * nKeys));
 	return size;
 }
 
 size_t KeyframeData::numberOfBytes_single(const BaseAnimation::SharedKeyList keyList)
 {
-	return (keyList->size() * sizeof(Keyframe)) + 1;
+	return (keyList->size() * sizeof(Keyframe_pck)) + 1;
 }
 
 void KeyframeData::initializeChannelData_single(const BaseAnimation::SharedKeyList keyList)
 {
 	data_.get()[0] = keyList->size();
-	Keyframe* keyData = reinterpret_cast<Keyframe*>(&(data_.get())[1]);
+	Keyframe_pck* keyData = reinterpret_cast<Keyframe_pck*>(&(data_.get())[1]);
 	size_t keyIndex = 0;
 	for (auto key = keyList->cbegin(); key != keyList->cend(); ++key)
 	{
@@ -117,14 +117,14 @@ void KeyframeData::initializeChannelData_multi(const BaseAnimation::ChannelKeyLi
 {
 	uint16_t startKeysIndex = sizeof(KeyIndex) * nChannels_;
 	KeyIndex* chData = reinterpret_cast<KeyIndex*>(data_.get());
-	Keyframe* keyData = reinterpret_cast<Keyframe*>(&(data_.get())[startKeysIndex]);
+	Keyframe_pck* keyData = reinterpret_cast<Keyframe_pck*>(&(data_.get())[startKeysIndex]);
 	uint8_t chNumber = 0;
 	size_t keyIndex = 0;
 	for (auto ch : chKeys)
 	{
 		chData[chNumber].nKeys = ch->size();
 		chData[chNumber].chId = chNumber;
-		chData[chNumber].keys_offset = (sizeof(Keyframe) * keyIndex) + startKeysIndex;
+		chData[chNumber].keys_offset = (sizeof(Keyframe_pck) * keyIndex) + startKeysIndex;
 		for (auto it = ch->cbegin(); it != ch->cend(); ++it)
 		{
 			keyData[keyIndex] = *it;
