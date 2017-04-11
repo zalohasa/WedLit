@@ -35,7 +35,7 @@ constexpr uint16_t NUMBER_OF_PIXELS = 24; //Number of leds in the led array
 constexpr size_t EEPROM_MAP_SIZE = 8; //Size of the eeprom to map
 constexpr int CHANNEL_ID_EEPROM_ADDRESS = 0; //Addres of the channel id in the EEPROM
 
-const char* ssid = "Zalote";
-const char* password = "lareddegonzalin2000$$";
+const char* ssid = "WedLit";
+const char* password = "WedLit2017";
 
 #endif //LIGHTER_CONFIG_H

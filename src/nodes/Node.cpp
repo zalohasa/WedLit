@@ -92,25 +92,35 @@ const std::string& Node::getIp()
 
 bool Node::sendKeyframesInKeyframeMode(KeyframeData data)
 {
-	TcpSocket init(ip_, tcp_port_);
-	assert(init.isValid());//TODO change for something less intrusive(all asserts here)
-	init.send(CMD_INSERT, sizeof(CMD_INSERT));
-	init.recv();
-	init.close();
-
 	TcpSocket keyData(ip_, tcp_port_);
 	assert(keyData.isValid());
 	keyData.send(data.getRawData(), data.getSize());
 	keyData.recv();
 	keyData.close();
 
+	return true;
+}
+
+bool Node::putNodeInKeyIn()
+{
+	TcpSocket init(ip_, tcp_port_);
+	assert(init.isValid());//TODO change for something less intrusive(all asserts here)
+	init.send(CMD_INSERT, sizeof(CMD_INSERT));
+	init.recv();
+	init.close();
+
+	return true; //TODO
+}
+
+bool Node::exitNodeFromKeyIn()
+{
 	TcpSocket end(ip_, tcp_port_);
 	assert(end.isValid());
 	end.send(CMD_END, sizeof(CMD_END));
 	end.recv();
 	end.close();
 
-	return true;
+	return true;//TODO
 }
 
 bool Node::sendSyncRequest(std::chrono::steady_clock::time_point startPoint, int32_t& offset, int32_t& rt)

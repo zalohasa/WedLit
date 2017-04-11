@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <chrono>
+#include <thread>
 
 static constexpr const char CMD_INSERT[] = "in";
 static constexpr const char CMD_CLEAR[] = "cl";
@@ -60,18 +61,25 @@ public:
 	void correctDrift(std::chrono::steady_clock::time_point startTime);
 
 	void init();
+	void startDiscoveryThread();
 
 protected:
+	void discoverAllNodes();
 	NodeId stripNodeID(std::string nodeIdentification);
 	void remakeChannelToNodes();
 	void sendToChannel(KeyframeData& data, AnimationChannel ch);
+	void putChannelInKeyIn(AnimationChannel ch);
+	void exitChannelFromKeyIn(AnimationChannel ch);
 	std::unordered_map<NodeId, std::shared_ptr<Node>> nodeIdToNode_;
 	std::unordered_map<AnimationChannel, std::list<std::shared_ptr<Node>>>channelToNodes_;
 	ChannelMap channelMap_;
 	UdpSocket socket_;
 	int discoveryTimeout_;
+	std::thread discoveryThread_;
 
 private:
+	static void discovery_thread_entry(NodeController* nc);
+	void internal_discovery();
 	
 };
 

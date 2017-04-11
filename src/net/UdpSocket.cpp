@@ -1,4 +1,5 @@
 #include "UdpSocket.h"
+#include "WedLit.h"
 
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -7,6 +8,8 @@
 #include <poll.h>
 #include <stdlib.h>
 #include <functional>
+
+INIT_LOG(UDP_SOCKET);
 
 static long getTimestamp()
 {
@@ -21,7 +24,7 @@ void charPointerDeleter(const char* data)
 	free((void*)data);
 }
 
-UdpSocket::UdpSocket(std::string ipAddress, uint16_t port, bool broadcast) : Socket()
+UdpSocket::UdpSocket(std::string ipAddress, uint16_t port, bool broadcast, bool reuseport, bool bind) : Socket()
 {
 	socketDescriptor_ = socket(AF_INET, SOCK_DGRAM, 0);
 	if (socketDescriptor_ < 0)
@@ -39,6 +42,21 @@ UdpSocket::UdpSocket(std::string ipAddress, uint16_t port, bool broadcast) : Soc
 		{
 			int enable = 1;
 			setsockopt(socketDescriptor_, SOL_SOCKET, SO_BROADCAST, &enable, sizeof(enable));
+		}
+
+		if (reuseport)
+		{	
+			int enable = 1;
+			setsockopt(socketDescriptor_, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(enable));
+		}
+
+		if (bind)
+		{
+			if (::bind(socketDescriptor_, (struct sockaddr*) &address_, sizeof(address_)) < 0)
+			{
+				ERROR("Error binding UPD socket {}", strerror(errno));
+				valid_ = false;
+			}
 		}
 	}
 }

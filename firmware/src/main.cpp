@@ -185,6 +185,11 @@ void setup()
     strip.Show();
     delayMicroseconds(100*1000);
   }
+  IPAddress ip;
+  ip.fromString("10.0.4.255");
+  MyUdp.beginPacketMulticast(ip, 1236, WiFi.localIP());
+  MyUdp.write(lighterhostname);
+  MyUdp.endPacket();
 }
 
 uint8_t linearInterpool(uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x)

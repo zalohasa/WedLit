@@ -19,6 +19,11 @@ static long getTimestamp()
 	return (time.tv_sec * 1000) + (time.tv_nsec / (1000*1000));
 }
 
+void NodeController::discovery_thread_entry(NodeController* nc)
+{
+	nc->internal_discovery();
+}
+
 NodeController::NodeController(const std::string& broadcastIp, uint16_t broadcastPort) : 
 socket_(broadcastIp, broadcastPort, true),
 discoveryTimeout_(250)
@@ -28,7 +33,11 @@ discoveryTimeout_(250)
 
 NodeController::~NodeController()
 {
-	//Nothing to do
+	if (discoveryThread_.joinable())
+	{
+		DEBUG("Waiting for discovery thread to finish");
+		discoveryThread_.join();
+	}
 }
 
 void NodeController::setChannelMap(const NodeController::ChannelMap& map)
@@ -208,11 +217,14 @@ void NodeController::sendInitialKeys(const BaseAnimation::ChannelKeyList &keys)
 		{
 			DEBUG("Sending all keys to channel {} - Keys: {}", chNum, allKeys->size());
 			KeyframeData data(allKeys);
+			putChannelInKeyIn(chNum);
 			sendToChannel(data, chNum);
+			exitChannelFromKeyIn(chNum);
 		}
 		else
 		{
 			DEBUG("Splitting keys in many frames for channel {}", chNum);
+			putChannelInKeyIn(chNum);
 			size_t numOfKeys = allKeys->size();
 			size_t lastSent = 0;
 			//Fill n times the full frame
@@ -235,26 +247,89 @@ void NodeController::sendInitialKeys(const BaseAnimation::ChannelKeyList &keys)
 				KeyframeData data(keyList);
 				sendToChannel(data, chNum);
 			}
+			exitChannelFromKeyIn(chNum);
 		}
 	}
 }
 
 void NodeController::init()
 {
+	discoverAllNodes();
+}
+
+void NodeController::startDiscoveryThread()
+{
+	INFO("Starting discovery thread for new nodes");
+	discoveryThread_ = std::thread(&NodeController::discovery_thread_entry, this);
+}
+
+void NodeController::discoverAllNodes()
+{
 	//Lets discover the nodes
+	INFO("Finding connected nodes...");
 	channelMap_.clear();
-	socket_.send(CMD_DISCOVERY);
-	std::vector<UdpSocket::UdpResponse> response = socket_.recvfrom(discoveryTimeout_);
-	for (auto n : response)
+	//TODO Change the 4 iterations to some configurable value.
+	//Try to discover nodes using 4 discovery rounds.
+	for (int i = 0; i < 4; ++i)
 	{
-		NodeId id = stripNodeID(std::string(n.data.get(),n.size));
-		std::shared_ptr<Node> newNode = std::make_shared<Node>(n.address, 1235, n.port, id);
-		newNode->setChannel(0);
-		channelMap_.insert(std::make_pair(id, 0));
-		nodeIdToNode_.insert(std::make_pair(id, newNode));
-		DEBUG("Node found: {} Address: {}", id, n.address);
+		DEBUG("Discovery round {}", i+1);
+		socket_.send(CMD_DISCOVERY);
+		std::vector<UdpSocket::UdpResponse> response = socket_.recvfrom(discoveryTimeout_);
+		for (auto n : response)
+		{
+			NodeId id = stripNodeID(std::string(n.data.get(),n.size));
+			if (nodeIdToNode_.find(id) == nodeIdToNode_.end())
+			{
+				std::shared_ptr<Node> newNode = std::make_shared<Node>(n.address, 1235, n.port, id);
+				newNode->setChannel(0);
+				channelMap_.insert(std::make_pair(id, 0));
+				nodeIdToNode_.insert(std::make_pair(id, newNode));
+				DEBUG("Node found: {} Address: {}", id, n.address);
+			}
+			else
+			{
+				DEBUG("Discovered node {} already in node list.", id);
+			}
+		}
 	}
-	INFO("Found {} nodes", nodeIdToNode_.size());
+	INFO("Found {} connected nodes", nodeIdToNode_.size());
+}
+
+void NodeController::internal_discovery()
+{
+	UdpSocket discoverySocket("10.0.4.255", 1236, true, false, true);
+	assert(discoverySocket.isValid());
+	while (discoverySocket.isValid() && (!appContext.exitReq))
+	{
+		std::vector<UdpSocket::UdpResponse> response = discoverySocket.recvfrom(2000);
+		for (auto n : response)
+		{
+			std::string data(n.data.get(), n.size);
+			std::string::size_type idx;
+			if ((idx = data.find("-")) != std::string::npos)
+			{
+				std::string bgn = data.substr(0, idx);
+				if (bgn == "lighter")
+				{
+					NodeId id = stripNodeID(data);
+					if (nodeIdToNode_.find(id) == nodeIdToNode_.end())
+					{
+						std::shared_ptr<Node> newNode = std::make_shared<Node>(n.address, 1235, n.port, id);
+						newNode->setChannel(0);
+						channelMap_.insert(std::make_pair(id, 0));
+						nodeIdToNode_.insert(std::make_pair(id, newNode));
+						INFO("New node appeared: {} Address: {}", id, n.address);
+					}
+					else
+					{
+						DEBUG("Discovered node {} already in node list.", id);
+					}
+				}
+			}
+		}
+	}
+	DEBUG("Discovery thread finished");
+
 }
 
 NodeController::NodeId NodeController::stripNodeID(std::string nodeIdentification)
@@ -270,16 +345,23 @@ void NodeController::remakeChannelToNodes()
 	for (auto ch : channelMap_)
 	{
 		NodeId id = ch.first;
-		AnimationChannel channel = ch.second;
-		if (channelToNodes_.find(channel) == channelToNodes_.end())
+		if (nodeIdToNode_.find(id) != nodeIdToNode_.end())
 		{
-			channelToNodes_.insert(
-			std::make_pair(ch.second, std::list<std::shared_ptr<Node>>()));
-			channelToNodes_.at(channel).push_back(nodeIdToNode_.at(id));
+			AnimationChannel channel = ch.second;
+			if (channelToNodes_.find(channel) == channelToNodes_.end())
+			{
+				channelToNodes_.insert(
+				std::make_pair(ch.second, std::list<std::shared_ptr<Node>>()));
+				channelToNodes_.at(channel).push_back(nodeIdToNode_.at(id));
+			}
+			else
+			{
+				channelToNodes_.at(channel).push_back(nodeIdToNode_.at(id));
+			}
 		}
 		else
 		{
-			channelToNodes_.at(channel).push_back(nodeIdToNode_.at(id));
+			WARN("The nodeId {} was not found in current node list.", id);
 		}
 		
 	}
@@ -298,6 +380,36 @@ void NodeController::sendToChannel(KeyframeData& data, AnimationChannel ch)
 	{
 		TRACE("Sending to node {}", node->getNodeId());
 		node->sendKeyframesInKeyframeMode(data);
+	}
+}
+
+void NodeController::putChannelInKeyIn(AnimationChannel ch)
+{
+	if (channelToNodes_.find(ch) == channelToNodes_.end())
+	{
+		WARN("No nodes for channel {}", ch);
+		return;
+	}
+	
+	for (auto node : channelToNodes_.at(ch))
+	{
+		TRACE("Putting node in KeyIn {}", node->getNodeId());
+		node->putNodeInKeyIn();
+	}
+}
+
+void NodeController::exitChannelFromKeyIn(AnimationChannel ch)
+{
+	if (channelToNodes_.find(ch) == channelToNodes_.end())
+	{
+		WARN("No nodes for channel {}", ch);
+		return;
+	}
+	
+	for (auto node : channelToNodes_.at(ch))
+	{
+		TRACE("Exit node from KeyIn {}", node->getNodeId());
+		node->exitNodeFromKeyIn();
 	}
 }
 

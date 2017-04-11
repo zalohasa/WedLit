@@ -1,10 +1,13 @@
 #include "AnimationController.h"
 #include "spdlog/spdlog.h"
+#include "WedLit.h"
 
 #include <QByteArray>
 #include <QDir>
 
 #include <gtest/gtest.h>
+
+WedLitContext appContext;
 
 static auto stdout_sink = spdlog::sinks::stdout_sink_mt::instance();
 std::shared_ptr<spdlog::sinks::ansicolor_sink> color_sink = std::make_shared<spdlog::sinks::ansicolor_sink>(stdout_sink);

@@ -6,13 +6,15 @@
 
 INIT_LOG(UPLOADER);
 
+WedLitContext appContext;
+
 int main(int argc, char** argv)
 {
 	std::cout << "WedLit firmware uploader" << std::endl;
 	std::cout << "Version: " << WedLit_VERSION_MAJOR << "." << WedLit_VERSION_MINOR << std::endl;
 	std::cout << "By Zhaf - 2017" << std::endl;
 
-	std::shared_ptr<NodeController> ctrl = std::make_shared<NodeController>("192.168.2.255", 1234);
+	std::shared_ptr<NodeController> ctrl = std::make_shared<NodeController>("10.0.4.255", 1234);
 	ctrl->init();
 
 	std::vector<std::string> ips = ctrl->getNodesAddr();

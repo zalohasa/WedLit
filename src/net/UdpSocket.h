@@ -23,7 +23,7 @@ public:
 		bool isNull(){return address.empty();}
 	};
 
-	UdpSocket(std::string ipAddress, uint16_t port, bool broadcast = false);
+	UdpSocket(std::string ipAddress, uint16_t port, bool broadcast = false, bool reuseport = false, bool bind = false);
 	~UdpSocket();
 
 	void send(const std::string& txt);

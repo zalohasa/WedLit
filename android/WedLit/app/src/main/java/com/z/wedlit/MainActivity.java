@@ -16,7 +16,7 @@ import android.widget.ListView;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String SERVER = "192.168.2.18";
+    public static final String SERVER = "10.0.4.1";
     public static final int PORT = 3210;
 
     ArrayAdapter<String> list;

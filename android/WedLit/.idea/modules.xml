@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/WedLit.iml" filepath="$PROJECT_DIR$/WedLit.iml" />
       <module fileurl="file:///mnt/NasuX/Zalo/Proyectos/WedLit/android/WedLit/WedLit.iml" filepath="/mnt/NasuX/Zalo/Proyectos/WedLit/android/WedLit/WedLit.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file:///mnt/NasuX/Zalo/Proyectos/WedLit/android/WedLit/app/app.iml" filepath="/mnt/NasuX/Zalo/Proyectos/WedLit/android/WedLit/app/app.iml" />
     </modules>
   </component>

@@ -21,6 +21,8 @@ public:
 
 	bool off();
 	bool clear();
+	bool putNodeInKeyIn();
+	bool exitNodeFromKeyIn();
 	bool sendKeyframesInKeyframeMode(KeyframeData data);
  	const std::string& getIp();
  	bool sendSyncRequest(std::chrono::steady_clock::time_point startPoint, int32_t& offset, int32_t& rt);

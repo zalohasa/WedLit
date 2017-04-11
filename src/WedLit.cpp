@@ -53,8 +53,9 @@ int main(int argc, char** argv)
 
 	Server srv(3210);
 
-	appContext.node_controller = std::make_shared<NodeController>("192.168.2.255", 1234);
+	appContext.node_controller = std::make_shared<NodeController>("10.0.4.255", 1234);
 	appContext.node_controller->init();
+	appContext.node_controller->startDiscoveryThread();
 
 	srv.exec();
 
