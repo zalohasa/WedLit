@@ -24,6 +24,7 @@ Node::Node(std::string ip, uint16_t tcp_port, uint16_t udp_port, const NodeContr
 Node::~Node()
 {
 	//NOthing to do 
+	DEBUG("Node {} deleted!!!!", nodeId_);
 }
 
 AnimationChannel Node::getChannel()
@@ -93,34 +94,54 @@ const std::string& Node::getIp()
 bool Node::sendKeyframesInKeyframeMode(KeyframeData data)
 {
 	TcpSocket keyData(ip_, tcp_port_);
-	assert(keyData.isValid());
-	keyData.send(data.getRawData(), data.getSize());
-	keyData.recv();
-	keyData.close();
-
-	return true;
+	if (keyData.isValid())
+	{
+		keyData.send(data.getRawData(), data.getSize());
+		keyData.recv();
+		keyData.close();
+		return true;
+	}
+	else
+	{
+		ERROR("Error sending keyframe data to node {}", nodeId_);
+		return false;
+	}
 }
 
 bool Node::putNodeInKeyIn()
 {
 	TcpSocket init(ip_, tcp_port_);
-	assert(init.isValid());//TODO change for something less intrusive(all asserts here)
-	init.send(CMD_INSERT, sizeof(CMD_INSERT));
-	init.recv();
-	init.close();
+	if (init.isValid())
+	{
+		init.send(CMD_INSERT, sizeof(CMD_INSERT));
+		init.recv();
+		init.close();
+		return true;
+	}
+	else
+	{
+		ERROR("Error putting node {} in keymode", nodeId_);
+		return false;
+	}
 
-	return true; //TODO
 }
 
 bool Node::exitNodeFromKeyIn()
 {
 	TcpSocket end(ip_, tcp_port_);
-	assert(end.isValid());
-	end.send(CMD_END, sizeof(CMD_END));
-	end.recv();
-	end.close();
+	if (end.isValid())
+	{
+		end.send(CMD_END, sizeof(CMD_END));
+		end.recv();
+		end.close();
+		return true;
+	}
+	else
+	{
+		ERROR("Error getting node {} out of keymode", nodeId_);
+		return false;
+	}
 
-	return true;//TODO
 }
 
 bool Node::sendSyncRequest(std::chrono::steady_clock::time_point startPoint, int32_t& offset, int32_t& rt)

@@ -70,6 +70,7 @@ protected:
 	void sendToChannel(KeyframeData& data, AnimationChannel ch);
 	void putChannelInKeyIn(AnimationChannel ch);
 	void exitChannelFromKeyIn(AnimationChannel ch);
+	void removeDeadNode(std::shared_ptr<Node> node);
 	std::unordered_map<NodeId, std::shared_ptr<Node>> nodeIdToNode_;
 	std::unordered_map<AnimationChannel, std::list<std::shared_ptr<Node>>>channelToNodes_;
 	ChannelMap channelMap_;

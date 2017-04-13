@@ -52,7 +52,10 @@ void NodeController::setChannelMap(const NodeController::ChannelMap& map)
 		}
 		else
 		{
-			nodeIdToNode_[ch.first]->setChannel(ch.second);
+			if (!nodeIdToNode_[ch.first]->setChannel(ch.second))
+			{
+				removeDeadNode(nodeIdToNode_[ch.first]);
+			}
 		}
 	}
 	remakeChannelToNodes();
@@ -60,28 +63,54 @@ void NodeController::setChannelMap(const NodeController::ChannelMap& map)
 
 void NodeController::setAllToChannel(AnimationChannel channel)
 {
+	std::list<std::shared_ptr<Node>> removeList;
 	DEBUG("Setting all nodes to channel: {}", channel);
 	channelMap_.clear();
 	for (auto ch : nodeIdToNode_)
 	{
-		ch.second->setChannel(channel);
-		channelMap_.insert(std::make_pair(ch.first, channel));
+		if (ch.second->setChannel(channel))
+		{
+			channelMap_.insert(std::make_pair(ch.first, channel));
+		} 
+		else
+		{
+			removeList.push_back(ch.second);
+		}
 	}
+
+	for (auto node : removeList)
+	{
+		removeDeadNode(node);
+	}
+
 	remakeChannelToNodes();
 }
 
 void NodeController::setChannelAuto(size_t numOfChannels)
 {
+	std::list<std::shared_ptr<Node>> removeList;
 	DEBUG("Setting all nodes to autochannel");
 	channelMap_.clear();
 	size_t idx = 0;
 	for (auto ch : nodeIdToNode_)
 	{
 		AnimationChannel dstCh = idx % numOfChannels;
-		ch.second->setChannel(dstCh);
-		channelMap_.insert(std::make_pair(ch.first, dstCh));
-		++idx;
+		if (ch.second->setChannel(dstCh))
+		{
+			channelMap_.insert(std::make_pair(ch.first, dstCh));
+			++idx;
+		}
+		else
+		{
+			removeList.push_back(ch.second);
+		}
 	}
+
+	for (auto node : removeList)
+	{
+		removeDeadNode(node);
+	}
+
 	remakeChannelToNodes();
 }
 
@@ -100,7 +129,10 @@ void NodeController::setChannel(const NodeId &nodeId, AnimationChannel channel)
 
 	if (nodeIdToNode_.find(nodeId) != nodeIdToNode_.end())
 	{
-		nodeIdToNode_[nodeId]->setChannel(channel);
+		if (!nodeIdToNode_[nodeId]->setChannel(channel))
+		{
+			removeDeadNode(nodeIdToNode_[nodeId]);
+		}
 	}
 	else
 	{
@@ -322,7 +354,7 @@ void NodeController::internal_discovery()
 					}
 					else
 					{
-						DEBUG("Discovered node {} already in node list.", id);
+						WARN("Discovered node {} already in node list.", id);
 					}
 				}
 			}
@@ -375,11 +407,20 @@ void NodeController::sendToChannel(KeyframeData& data, AnimationChannel ch)
 		WARN("No nodes for channel {}", ch);
 		return;
 	}
-	
+		
+	std::list<std::shared_ptr<Node>> removeList;
+
 	for (auto node : channelToNodes_.at(ch))
 	{
-		TRACE("Sending to node {}", node->getNodeId());
-		node->sendKeyframesInKeyframeMode(data);
+		if (!node->sendKeyframesInKeyframeMode(data))
+		{
+			removeList.push_back(node);
+		}
+	}
+
+	for (auto node : removeList)
+	{
+		removeDeadNode(node);
 	}
 }
 
@@ -390,11 +431,20 @@ void NodeController::putChannelInKeyIn(AnimationChannel ch)
 		WARN("No nodes for channel {}", ch);
 		return;
 	}
-	
+
+	std::list<std::shared_ptr<Node>> removeList;
+
 	for (auto node : channelToNodes_.at(ch))
 	{
-		TRACE("Putting node in KeyIn {}", node->getNodeId());
-		node->putNodeInKeyIn();
+		if (!node->putNodeInKeyIn())
+		{
+			removeList.push_back(node);
+		}
+	}
+
+	for (auto node : removeList)
+	{
+		removeDeadNode(node);
 	}
 }
 
@@ -405,11 +455,40 @@ void NodeController::exitChannelFromKeyIn(AnimationChannel ch)
 		WARN("No nodes for channel {}", ch);
 		return;
 	}
-	
+
+	std::list<std::shared_ptr<Node>> removeList;
+
 	for (auto node : channelToNodes_.at(ch))
 	{
-		TRACE("Exit node from KeyIn {}", node->getNodeId());
-		node->exitNodeFromKeyIn();
+		if (!node->exitNodeFromKeyIn())
+		{
+			removeList.push_back(node);
+		}
+	}
+
+	for (auto node : removeList)
+	{
+		removeDeadNode(node);
+	}
+}
+
+void NodeController::removeDeadNode(std::shared_ptr<Node> node)
+{
+	WARN("Removing dead node {}", node->getNodeId());
+	NodeId id = node->getNodeId();
+	nodeIdToNode_.erase(id);
+
+	for (auto & ch : channelToNodes_)
+	{
+		for (auto it = ch.second.begin(); it != ch.second.end(); ++it)
+		{
+			if ((*it)->getNodeId() == id)
+			{
+				DEBUG("Found dead node in channel list. Removing...");
+				ch.second.erase(it);
+				return;
+			}
+		}
 	}
 }
 

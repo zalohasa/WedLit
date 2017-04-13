@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 INIT_LOG(TCP_SOCKET);
 
@@ -34,10 +35,39 @@ TcpSocket::TcpSocket(std::string ipAddress, uint16_t port) : Socket()
 		address_.sin_family = AF_INET;
 		inet_aton(ipAddress.c_str(), &(address_.sin_addr));
 		address_.sin_port = htons(port);
+
+		struct timeval tv;
+		tv.tv_sec = 3;
+		tv.tv_usec = 0;
+
+		//Setting send and receive timeout to 3 seconds, to avoid hanging forever
+		if (setsockopt(socketDescriptor_, SOL_SOCKET, SO_RCVTIMEO, (const void*)&tv, sizeof(struct timeval)) < 0)
+		{
+			ERROR("Error setting option: {}", strerror(errno));
+		}
+
+		if (setsockopt(socketDescriptor_, SOL_SOCKET, SO_SNDTIMEO, (const void*)&tv, sizeof(struct timeval)) < 0)
+		{
+			ERROR("Error setting option: {}", strerror(errno));
+		}
+
 		if (connect(socketDescriptor_, (struct sockaddr*) &address_, sizeof(address_)) < 0)
 		{
-			ERROR("Error connecting to {}:{} {}", ipAddress, port, strerror(errno));
-			valid_ = false;
+			//Did the connection time out?
+			if (errno == EINPROGRESS)
+			{
+				WARN("Connection timed out, retrying...");
+				if (connect(socketDescriptor_, (struct sockaddr*) &address_, sizeof(address_)) < 0)
+				{
+					ERROR("Error connecting to {}:{} {}", ipAddress, port, strerror(errno));
+					valid_ = false;
+				}
+			}
+			else 
+			{
+				ERROR("Error connecting to {}:{} {}", ipAddress, port, strerror(errno));
+				valid_ = false;
+			}
 		}
 	}
 }
